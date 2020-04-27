@@ -162,9 +162,9 @@ int main(void)
 				perror("send");
 			int numbytes;
 			char buf[2048];
-			//int timeout = 10;
+			int timeout = 10;
 
-			while(finished)
+			while(timeout > 0)
 			{
 				if ((numbytes = recv(new_fd, buf, 2047, 0)) == -1)
 				{
@@ -175,7 +175,7 @@ int main(void)
 				if (send(new_fd, "Hello again", 11, 0) == -1)
                                 	perror("send");
 			
-				//timeout--;
+				timeout--;
 			}
 
 			close(new_fd);
