@@ -13,4 +13,4 @@ clean:
 pristine: clean
 
 %: %.c
-	$(CC) $(CCOPTS) -o $@ $<
+	$(CC) $(CCOPTS) -o $@ $< -pthread -lnsl
