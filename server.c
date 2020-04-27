@@ -118,7 +118,6 @@ int main(void) {
     printf("server: packet is %d bytes long\n", numbytes);
     buf[numbytes] = '\0';
     printf("server: packet contains \"%s\"\n", buf);
-    // close(sockfd);
 	}
 
 	return 0;
