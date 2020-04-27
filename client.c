@@ -11,6 +11,7 @@ client.c
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
+#include <time.h>
 
 #include <arpa/inet.h>
 
