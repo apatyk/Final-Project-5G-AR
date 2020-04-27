@@ -24,6 +24,7 @@
 char client_message[2000];
 char buffer[1024];
 pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+int finished = 1;
 
 void * socketThread(void *arg)
 {
@@ -70,60 +71,7 @@ void *get_in_addr(struct sockaddr *sa)
 }
 
 int main(void)
-{
-	int serverSocket, newSocket;
-	struct sockaddr_in serverAddr;
-	struct sockaddr_storage serverStorage;
-	socklen_t addr_size;
-
-	//create the socket
-	serverSocket = socket(PF_INET, SOCK_STREAM, 0);
-
-	//configure the settings of the server address struct
-	//address family = internet
-	serverAddr.sin_family = AF_INET;
-
-	//set port number, using htons function to use proper byte order
-	serverAddr.sin_port = htons(7799);
-
-	//set IP addreass
-	serverAddr.sin_addr.s_addr = inet_addr("");
-
-	//set all bits of the padding field to 0
-	memset(serverAddr.sin_zero, '\0', sizeof(serverAddr.sin_zero));
-
-	//bind the address struct to the socket
-	bind(serverSocket, (struct sockaddr *) &serverAddr, sizeof(serverAddr));
-
-	//listen on the socket, with 5 max connection requests queued
-	if(listen(serverSocket, 5)==0)
-		printf("Listening\n");
-	else
-		printf("Error\n");
-	pthread_t tid[5];
-	int i = 0;
-	while(1)
-	{
-		//accept call creates a new socket for the incoming connection
-		addr_size = sizeof(serverStorage);
-		newSocket = accept(serverSocket, (struct sockaddr *) &serverStorage, &addr_size);
-
-		//for each client request creates a thread and assign the client request to it to process
-		//so the main thread can entertain next request
-		if(pthread_create(&tid[i], NULL, socketThread, &newSocket) != 0)
-			printf("Failed to create thread\n");
-
-		if( i >= 5)
-		{
-			i = 0;
-			while(i < 5)
-			{
-				pthread_join(tid[i++], NULL);
-			}
-			i = 0;
-		}
-	}
-	/*
+{	
 	int sockfd, new_fd;  // listen on sock_fd, new connection on new_fd
 	struct addrinfo hints, *servinfo, *p;
 	struct sockaddr_storage their_addr; // connector's address information
@@ -188,14 +136,21 @@ int main(void)
 
 	printf("server: waiting for connections...\n");
 
+	int count = 0;
+	
 	while(1) {  // main accept() loop
 		sin_size = sizeof their_addr;
+		if (count == 4)
+		{
+			getc(stdin);
+			finished = 0;
+		}			
 		new_fd = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size);
 		if (new_fd == -1) {
 			perror("accept");
 			continue;
 		}
-
+		count++;
 		inet_ntop(their_addr.ss_family,
 			get_in_addr((struct sockaddr *)&their_addr),
 			s, sizeof s);
@@ -205,11 +160,29 @@ int main(void)
 			close(sockfd); // child doesn't need the listener
 			if (send(new_fd, "Hello, world!", 13, 0) == -1)
 				perror("send");
+			int numbytes;
+			char buf[2048];
+			//int timeout = 10;
+
+			while(finished)
+			{
+				if ((numbytes = recv(new_fd, buf, 2047, 0)) == -1)
+				{
+					perror("recv");
+				}
+				buf[numbytes] = '\0';
+				printf("server: received from %s\n", s);
+				if (send(new_fd, "Hello again", 11, 0) == -1)
+                                	perror("send");
+			
+				//timeout--;
+			}
+
 			close(new_fd);
 			exit(0);
 		}
 		close(new_fd);  // parent doesn't need this
 	}
-	*/
+	
 	return 0;
 }
