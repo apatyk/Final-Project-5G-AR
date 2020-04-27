@@ -1,6 +1,5 @@
 # Final-Project-5G-AR
-## ECE 4400/6400
-## Clemson University
+## ECE 4400/6400 | Clemson University
 Collaborators: Zach Clements, Justin Langley, Ryan McDonnell, Adam Patyk, Andrew Stogner, Pavlo Triantafyllides
 
 ### Motivation
