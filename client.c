@@ -97,9 +97,9 @@ int main(int argc, char *argv[]) {
   latency = ((double)t)/CLOCKS_PER_SEC*1000; // in ms
 
 	buf[numbytes] = '\0';
-	printf("Sent: %s\tRcvd: %s\n", argv[2], buf);
+	printf("sent: %s\trcvd: %s\n", argv[2], buf);
   printf("latency: %lf ms\n", latency);
-  printf("throughput: %lf bytes/ms\n", numbytes/latency);
+  printf("throughput: %lf bytes/s\n", numbytes/latency*1000);
 
 	close(sockfd);
 
