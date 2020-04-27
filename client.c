@@ -35,6 +35,9 @@ int main(int argc, char *argv[]) {
 	int rv;
 	char s[INET6_ADDRSTRLEN];
 
+  clock_t t;
+  double latency;
+
 	if (argc != 3) {
 	    fprintf(stderr,"usage: client hostname id\n");
 	    exit(1);
@@ -77,6 +80,8 @@ int main(int argc, char *argv[]) {
 
 	freeaddrinfo(servinfo); // all done with this structure
 
+  t = clock();
+
     // send id to server
 	if (send(sockfd, argv[2], 6, 0) == -1)
 		perror("send");
@@ -86,8 +91,14 @@ int main(int argc, char *argv[]) {
 		perror("recv");
 		exit(1);
 	}
+
+  t = clock() - t; 
+  latency = ((double)t)/CLOCKS_PER_SEC*1000; // in ms
+
 	buf[numbytes] = '\0';
-	printf("%s: %s\n", argv[2], buf);
+	printf("Sent: %s\tRcvd: %s\n", argv[2], buf);
+  printf("latency: %lf ms", latency);
+  printf("throughput: %lf bytes/sec", numbytes/latency/1000);
 
 	close(sockfd);
 
