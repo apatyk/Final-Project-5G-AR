@@ -98,8 +98,8 @@ int main(int argc, char *argv[]) {
 
 	buf[numbytes] = '\0';
 	printf("Sent: %s\tRcvd: %s\n", argv[2], buf);
-  printf("latency: %lf ms", latency);
-  printf("throughput: %lf bytes/sec", numbytes/latency/1000);
+  printf("latency: %lf ms\n", latency);
+  printf("throughput: %lf bytes/ms\n", numbytes/latency);
 
 	close(sockfd);
 
