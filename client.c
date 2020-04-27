@@ -1,5 +1,5 @@
 /*
-** client.c -- a stream socket client demo
+client.c
 */
 
 #include <stdio.h>
@@ -14,7 +14,9 @@
 
 #include <arpa/inet.h>
 
-#define PORT "3490" // the port client will be connecting to 
+#define PORT "3495" // the port client will be connecting to 
+
+#define MAXDATASIZE 100 // max number of bytes we can get at once 
 
 // get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa) {
@@ -25,26 +27,29 @@ void *get_in_addr(struct sockaddr *sa) {
 	return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
+
 int main(int argc, char *argv[]) {
-	int sockfd, numbytes;
+	int sockfd, numbytes;  
+	char buf[MAXDATASIZE];
 	struct addrinfo hints, *servinfo, *p;
 	int rv;
+	char s[INET6_ADDRSTRLEN];
 
 	if (argc != 3) {
-		fprintf(stderr,"usage: client hostname message\n");
-		exit(1);
+	    fprintf(stderr,"usage: client hostname id\n");
+	    exit(1);
 	}
 
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family = AF_UNSPEC;
-	hints.ai_socktype = SOCK_DGRAM;
+	hints.ai_socktype = SOCK_STREAM;
 
 	if ((rv = getaddrinfo(argv[1], PORT, &hints, &servinfo)) != 0) {
 		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
 		return 1;
 	}
 
-	// loop through all the results and make a socket
+	// loop through all the results and connect to the first we can
 	for(p = servinfo; p != NULL; p = p->ai_next) {
 		if ((sockfd = socket(p->ai_family, p->ai_socktype,
 				p->ai_protocol)) == -1) {
@@ -52,25 +57,40 @@ int main(int argc, char *argv[]) {
 			continue;
 		}
 
+		if (connect(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
+			perror("client: connect");
+			close(sockfd);
+			continue;
+		}
+
 		break;
 	}
 
 	if (p == NULL) {
-		fprintf(stderr, "client: failed to create socket\n");
+		fprintf(stderr, "client: failed to connect\n");
 		return 2;
 	}
 
-	if ((numbytes = sendto(sockfd, argv[2], strlen(argv[2]), 0,
-			 p->ai_addr, p->ai_addrlen)) == -1) {
-		perror("talker: sendto");
+	inet_ntop(p->ai_family, get_in_addr((struct sockaddr *)p->ai_addr),
+			s, sizeof s);
+	printf("client: connecting to %s\n", s);
+
+	freeaddrinfo(servinfo); // all done with this structure
+
+    // send id to server
+	if (send(sockfd, argv[2], 6, 0) == -1)
+		perror("send");
+
+    // wait for server response
+	if ((numbytes = recv(sockfd, buf, MAXDATASIZE-1, 0)) == -1) {
+		perror("recv");
 		exit(1);
 	}
-
-	freeaddrinfo(servinfo);
-
-	printf("client: sent %d bytes to %s\n", numbytes, argv[1]);
+	buf[numbytes] = '\0';
+	printf("%s: %s\n", argv[2], buf);
 
 	close(sockfd);
 
 	return 0;
 }
+
