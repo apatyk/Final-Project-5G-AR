@@ -9,8 +9,8 @@ do
 	## display hostname
 	tput cup 2 5
 	echo "Hostname : $(hostname)"
-	## randomly limit delay between 0ms & 100ms
-	DELAY=$[RANDOM % 100]
+	## randomly limit delay between 0ms & 10ms
+	DELAY=$[RANDOM % 10]
 	sudo tc qdisc replace dev eth1 root netem delay ${DELAY}ms 1ms limit 1104B
 	tput cup 3 5
 	sudo tc qdisc show dev eth1
