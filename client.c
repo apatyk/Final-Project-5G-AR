@@ -112,7 +112,7 @@ void * clientThread(void *server)
 		RTT[((subnet *)server)->towerNum] = time_spent;
 		//printf("client: ping '%s' from %s took %f ms\n\n",buf, s, time_spent * 1000);
 		
-		sleep(3);
+		sleep(5);
 	}
 
         close(sockfd);
