@@ -11,7 +11,7 @@ do
 	echo "Hostname : $(hostname)"
 	## randomly limit delay between 0ms & 10ms
 	DELAY=$[RANDOM % 10]
-	sudo tc qdisc replace dev eth1 root netem delay ${DELAY}ms 1ms limit 1104B
+	sudo tc qdisc replace dev eth1 root netem delay ${DELAY}ms
 	tput cup 3 5
 	sudo tc qdisc show dev eth1
 	## wait 1s
