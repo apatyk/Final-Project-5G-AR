@@ -35,7 +35,6 @@ typedef struct subnet_t {
 
 void * clientThread(void *server)
 {
-	printf("In thread\n");
 	int sockfd, numbytes;  
         char buf[MAXDATASIZE];
         struct addrinfo hints, *servinfo, *p;
@@ -97,6 +96,7 @@ void * clientThread(void *server)
 		//ping loop
 		
 		clock_gettime(CLOCK_REALTIME, &start);
+	 
 		if (send(sockfd, data, 1024, 0) == -1)
 			perror("send");
 
@@ -152,8 +152,7 @@ int main()
 	//int time = 30;
 	while(!(getc(stdin) == 'x'))
 	{
-		printf("\nCurrent ping values:\n0: %f ms\n1: %f ms\n2: %f ms\n3: %f ms\n\n", 
-				1000 * RTT[0], 1000 * RTT[1], 1000 * RTT[2], 1000 * RTT[3]);
+		printf("\nCurrent ping values:\nTower 0: %f ms\nTower 1: %f ms\nTower 2: %f ms\nTower 3: %f ms\n\n", 1000 * RTT[0], 1000 * RTT[1], 1000 * RTT[2], 1000 * RTT[3]);
 
 		int bestTower = 0;
 		for (i = 1; i < 4; i++)
@@ -171,7 +170,6 @@ int main()
 	{
 		pthread_cancel(tid[i++]);
 		//pthread_join(tid[i++], NULL);
-		printf("%d:\n", i);
 	}
 
 	return 0;
