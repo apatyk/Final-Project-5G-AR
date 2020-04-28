@@ -14,10 +14,38 @@
 #include <arpa/inet.h>
 #include <sys/wait.h>
 #include <signal.h>
+#include <fcntl.h>
+#include <pthread.h>
 
 #define PORT "3490"  // the port users will be connecting to
 
 #define BACKLOG 10	 // how many pending connections queue will hold
+
+char client_message[2000];
+char buffer[1024];
+pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+int finished = 1;
+
+void * socketThread(void *arg)
+{
+	int newSocket = *((int *)arg);
+	recv(newSocket, client_message, 2000, 0);
+
+	//send message to the client socket
+	pthread_mutex_lock(&lock);
+	char *message = malloc(sizeof(client_message)+20);
+	strcpy(message, "Hello Client : ");
+	strcat(message, client_message);
+	strcat(message, "\n");
+	strcpy(buffer, message);
+	free(message);
+	pthread_mutex_unlock(&lock);
+	sleep(1);
+	send(newSocket, buffer, 13, 0);
+	printf("Exit socketThread \n");
+	close(newSocket);
+	pthread_exit(NULL);
+}
 
 void sigchld_handler(int s)
 {
@@ -43,7 +71,7 @@ void *get_in_addr(struct sockaddr *sa)
 }
 
 int main(void)
-{
+{	
 	int sockfd, new_fd;  // listen on sock_fd, new connection on new_fd
 	struct addrinfo hints, *servinfo, *p;
 	struct sockaddr_storage their_addr; // connector's address information
@@ -108,14 +136,21 @@ int main(void)
 
 	printf("server: waiting for connections...\n");
 
+	int count = 0;
+	
 	while(1) {  // main accept() loop
 		sin_size = sizeof their_addr;
+		if (count == 4)
+		{
+			getc(stdin);
+			finished = 0;
+		}			
 		new_fd = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size);
 		if (new_fd == -1) {
 			perror("accept");
 			continue;
 		}
-
+		count++;
 		inet_ntop(their_addr.ss_family,
 			get_in_addr((struct sockaddr *)&their_addr),
 			s, sizeof s);
@@ -125,11 +160,29 @@ int main(void)
 			close(sockfd); // child doesn't need the listener
 			if (send(new_fd, "Hello, world!", 13, 0) == -1)
 				perror("send");
+			int numbytes;
+			char buf[2048];
+			int timeout = 10;
+
+			while(timeout > 0)
+			{
+				if ((numbytes = recv(new_fd, buf, 2047, 0)) == -1)
+				{
+					perror("recv");
+				}
+				buf[numbytes] = '\0';
+				printf("server: received from %s\n", s);
+				if (send(new_fd, "Hello again", 11, 0) == -1)
+                                	perror("send");
+			
+				timeout--;
+			}
+
 			close(new_fd);
 			exit(0);
 		}
 		close(new_fd);  // parent doesn't need this
 	}
-
+	
 	return 0;
 }
